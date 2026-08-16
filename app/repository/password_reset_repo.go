@@ -3,7 +3,7 @@ package repository
 import (
 	"time"
 
-	"keuangan-api/internal/model"
+	"keuangan-api/app/model"
 
 	"gorm.io/gorm"
 )

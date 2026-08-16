@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"keuangan-api/internal/database"
-	"keuangan-api/internal/router"
+	"keuangan-api/app/database"
+	"keuangan-api/app/router"
 
 	"github.com/joho/godotenv"
 )

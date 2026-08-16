@@ -1,10 +1,10 @@
 package router
 
 import (
-	"keuangan-api/internal/handler"
-	"keuangan-api/internal/middleware"
-	"keuangan-api/internal/repository"
-	"keuangan-api/internal/service"
+	"keuangan-api/app/handler"
+	"keuangan-api/app/middleware"
+	"keuangan-api/app/repository"
+	"keuangan-api/app/service"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"

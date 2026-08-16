@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"keuangan-api/internal/model"
-	"keuangan-api/internal/repository"
+	"keuangan-api/app/model"
+	"keuangan-api/app/repository"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"

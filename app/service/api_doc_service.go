@@ -3,8 +3,8 @@ package service
 import (
 	"net/http"
 
-	"keuangan-api/internal/model"
-	"keuangan-api/internal/repository"
+	"keuangan-api/app/model"
+	"keuangan-api/app/repository"
 )
 
 type APIDocService struct {

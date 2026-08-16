@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"keuangan-api/internal/model"
+	"keuangan-api/app/model"
 
 	"gorm.io/gorm"
 )

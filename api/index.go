@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"sync"
 
-	"keuangan-api/internal/database"
-	"keuangan-api/internal/router"
+	"keuangan-api/app/database"
+	"keuangan-api/app/router"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"

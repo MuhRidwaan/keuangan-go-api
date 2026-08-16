@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 
-	"keuangan-api/internal/service"
+	"keuangan-api/app/service"
 	"keuangan-api/pkg/response"
 
 	"github.com/gin-gonic/gin"

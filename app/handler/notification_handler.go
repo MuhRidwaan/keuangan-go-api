@@ -3,8 +3,8 @@ package handler
 import (
 	"net/http"
 
-	"keuangan-api/internal/middleware"
-	"keuangan-api/internal/service"
+	"keuangan-api/app/middleware"
+	"keuangan-api/app/service"
 	"keuangan-api/pkg/response"
 
 	"github.com/gin-gonic/gin"
