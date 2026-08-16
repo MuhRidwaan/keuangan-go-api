@@ -396,7 +396,7 @@
             <p>Dokumentasi resmi dan panduan pengujian interaktif untuk seluruh REST API layanan Keuangan.</p>
             <div class="base-url-box">
                 <i data-lucide="server" style="width:16px;height:16px;color:#a855f7;"></i>
-                <span>Base URL: <strong>http://localhost:8080</strong></span>
+                <span>Base URL: <strong id="baseUrlText">http://localhost:8080</strong></span>
             </div>
         </div>
 
@@ -602,6 +602,9 @@
 
         // Init
         document.addEventListener("DOMContentLoaded", () => {
+            const baseUrl = window.location.origin;
+            const el = document.getElementById('baseUrlText');
+            if (el) el.innerText = baseUrl;
             fetchDocs();
         });
     </script>
