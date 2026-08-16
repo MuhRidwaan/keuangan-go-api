@@ -12,10 +12,8 @@ import (
 )
 
 func main() {
-	// 1. Load environment variables dari .env
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// 1. Load environment variables dari .env jika ada (diabaikan jika di Vercel/production)
+	_ = godotenv.Load()
 
 	// 2. Konek ke PostgreSQL via GORM + jalankan AutoMigrate
 	db := database.Connect()
