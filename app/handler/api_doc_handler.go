@@ -1,14 +1,17 @@
 package handler
 
 import (
+	_ "embed"
 	"net/http"
-	"os"
 
 	"keuangan-api/app/service"
 	"keuangan-api/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
+
+//go:embed docs.html
+var docsHTML string
 
 type APIDocHandler struct {
 	Service *service.APIDocService
@@ -26,10 +29,6 @@ func (h *APIDocHandler) GetAll(c *gin.Context) {
 
 // GET /docs — Menampilkan halaman Web UI dokumentasi interaktif
 func (h *APIDocHandler) RenderDocsUI(c *gin.Context) {
-	filePath := "web/docs.html"
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		c.String(http.StatusNotFound, "File web/docs.html tidak ditemukan")
-		return
-	}
-	c.File(filePath)
+	c.Header("Content-Type", "text/html; charset=utf-8")
+	c.String(http.StatusOK, docsHTML)
 }
