@@ -12,7 +12,10 @@ type TransactionRepository struct {
 }
 
 func (r *TransactionRepository) Create(tx *model.Transaction) error {
-	return r.DB.Create(tx).Error
+	if err := r.DB.Create(tx).Error; err != nil {
+		return err
+	}
+	return r.DB.Preload("Category").First(tx, "id = ?", tx.ID).Error
 }
 
 func (r *TransactionRepository) GetByUserID(userID uuid.UUID) ([]model.Transaction, error) {
@@ -35,7 +38,10 @@ func (r *TransactionRepository) FindByID(id uuid.UUID) (*model.Transaction, erro
 }
 
 func (r *TransactionRepository) Update(tx *model.Transaction) error {
-	return r.DB.Save(tx).Error
+	if err := r.DB.Save(tx).Error; err != nil {
+		return err
+	}
+	return r.DB.Preload("Category").First(tx, "id = ?", tx.ID).Error
 }
 
 // Delete melakukan soft delete (set deleted_at).

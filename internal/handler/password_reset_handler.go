@@ -21,14 +21,13 @@ func (h *PasswordResetHandler) ForgotPassword(c *gin.Context) {
 		return
 	}
 
-	code, err := h.Service.ForgotPassword(input)
+	token, code, err := h.Service.ForgotPassword(input)
 	if err != nil {
 		response.Error(c, code, err.Error())
 		return
 	}
 
-	// Selalu return pesan generik agar tidak bocorkan info email
-	response.Success(c, http.StatusOK, "Jika email terdaftar, link reset password telah dikirim", nil)
+	response.Success(c, http.StatusOK, "Jika email terdaftar, token reset password telah dibuat", map[string]string{"token": token})
 }
 
 // POST /api/reset-password

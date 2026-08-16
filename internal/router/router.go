@@ -70,11 +70,22 @@ func Setup(db *gorm.DB) *gin.Engine {
 		},
 	}
 
+	// --- API Docs ---
+	apiDocHandler := &handler.APIDocHandler{
+		Service: &service.APIDocService{
+			Repo: &repository.APIDocRepository{DB: db},
+		},
+	}
+
+	// Web UI Dokumentasi API
+	r.GET("/docs", apiDocHandler.RenderDocsUI)
+
 	// =========================================================
 	// Public Routes
 	// =========================================================
 	api := r.Group("/api")
 	{
+		api.GET("/docs", apiDocHandler.GetAll)
 		api.POST("/register", authHandler.Register)
 		api.POST("/login", authHandler.Login)
 		api.POST("/forgot-password", passwordResetHandler.ForgotPassword)
@@ -87,6 +98,9 @@ func Setup(db *gorm.DB) *gin.Engine {
 	protected := r.Group("/api")
 	protected.Use(middleware.AuthMiddleware())
 	{
+		// Change Password
+		protected.POST("/change-password", authHandler.ChangePassword)
+
 		// Categories
 		protected.GET("/categories", categoryHandler.GetCategories)
 		protected.POST("/categories", categoryHandler.CreateCategory)

@@ -38,20 +38,20 @@ func generateToken() (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func (s *PasswordResetService) ForgotPassword(input ForgotPasswordInput) (int, error) {
+func (s *PasswordResetService) ForgotPassword(input ForgotPasswordInput) (string, int, error) {
 	user, err := s.AuthRepo.FindByEmail(input.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// Jangan bocorkan apakah email terdaftar atau tidak (security best practice)
 			// Tetap return 200 agar attacker tidak bisa enumerate email
-			return http.StatusOK, nil
+			return "", http.StatusOK, nil
 		}
-		return http.StatusInternalServerError, errors.New("terjadi kesalahan pada server")
+		return "", http.StatusInternalServerError, errors.New("terjadi kesalahan pada server")
 	}
 
 	token, err := generateToken()
 	if err != nil {
-		return http.StatusInternalServerError, errors.New("gagal membuat token")
+		return "", http.StatusInternalServerError, errors.New("gagal membuat token")
 	}
 
 	resetToken := &model.PasswordResetToken{
@@ -61,7 +61,7 @@ func (s *PasswordResetService) ForgotPassword(input ForgotPasswordInput) (int, e
 	}
 
 	if err := s.Repo.Create(resetToken); err != nil {
-		return http.StatusInternalServerError, errors.New("gagal menyimpan token")
+		return "", http.StatusInternalServerError, errors.New("gagal menyimpan token")
 	}
 
 	// MOCK: Cetak reset link ke console (ganti dengan email service di production)
@@ -69,11 +69,12 @@ func (s *PasswordResetService) ForgotPassword(input ForgotPasswordInput) (int, e
 	fmt.Println("========================================")
 	fmt.Printf("  [MOCK EMAIL] Kepada: %s\n", user.Email)
 	fmt.Printf("  Subject: Reset Password Keuangan App\n")
+	fmt.Printf("  Token Reset: %s\n", token)
 	fmt.Printf("  Link: %s\n", resetLink)
 	fmt.Printf("  Berlaku hingga: %s\n", resetToken.ExpiresAt.Format("02 Jan 2006 15:04:05"))
 	fmt.Println("========================================")
 
-	return http.StatusOK, nil
+	return token, http.StatusOK, nil
 }
 
 func (s *PasswordResetService) ResetPassword(input ResetPasswordInput) (int, error) {

@@ -23,6 +23,15 @@ func (r *AuthRepository) FindByEmail(email string) (*model.User, error) {
 	return &user, nil
 }
 
+func (r *AuthRepository) FindByID(id string) (*model.User, error) {
+	var user model.User
+	err := r.DB.Where("id = ?", id).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 // UpdatePassword mengupdate password_hash user berdasarkan ID.
 func (r *AuthRepository) UpdatePassword(userID string, newHash string) error {
 	return r.DB.Model(&model.User{}).

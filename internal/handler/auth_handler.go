@@ -7,6 +7,7 @@ import (
 	"keuangan-api/pkg/response"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type AuthHandler struct {
@@ -47,4 +48,33 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	response.Success(c, code, "Login berhasil", result)
+}
+
+// ChangePassword godoc
+// POST /api/change-password
+func (h *AuthHandler) ChangePassword(c *gin.Context) {
+	userIDVal, exists := c.Get("userID")
+	if !exists {
+		response.Error(c, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	userID, ok := userIDVal.(uuid.UUID)
+	if !ok {
+		response.Error(c, http.StatusInternalServerError, "Gagal membaca user ID")
+		return
+	}
+
+	var input service.ChangePasswordInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	code, err := h.Service.ChangePassword(userID, input)
+	if err != nil {
+		response.Error(c, code, err.Error())
+		return
+	}
+
+	response.Success(c, code, "Password berhasil diubah", nil)
 }

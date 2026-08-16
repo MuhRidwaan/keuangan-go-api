@@ -8,6 +8,7 @@ import (
 	"keuangan-api/internal/repository"
 	pkgjwt "keuangan-api/pkg/jwt"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -90,4 +91,31 @@ func (s *AuthService) Login(input LoginInput) (*LoginResult, int, error) {
 	}
 
 	return &LoginResult{Token: token}, http.StatusOK, nil
+}
+
+type ChangePasswordInput struct {
+	OldPassword string `json:"old_password" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required,min=6"`
+}
+
+func (s *AuthService) ChangePassword(userID uuid.UUID, input ChangePasswordInput) (int, error) {
+	user, err := s.Repo.FindByID(userID.String())
+	if err != nil {
+		return http.StatusNotFound, errors.New("user tidak ditemukan")
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(input.OldPassword)); err != nil {
+		return http.StatusBadRequest, errors.New("password lama tidak sesuai")
+	}
+
+	hashed, err := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return http.StatusInternalServerError, errors.New("gagal memproses password baru")
+	}
+
+	if err := s.Repo.UpdatePassword(user.ID.String(), string(hashed)); err != nil {
+		return http.StatusInternalServerError, errors.New("gagal mengupdate password")
+	}
+
+	return http.StatusOK, nil
 }
