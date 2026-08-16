@@ -13,14 +13,16 @@ import (
 type Claims struct {
 	UserID uuid.UUID `json:"user_id"`
 	Email  string    `json:"email"`
+	Name   string    `json:"name"`
 	jwt.RegisteredClaims
 }
 
 // GenerateToken membuat JWT token baru untuk user yang login.
-func GenerateToken(userID uuid.UUID, email string) (string, error) {
+func GenerateToken(userID uuid.UUID, email string, name string) (string, error) {
 	claims := Claims{
 		UserID: userID,
 		Email:  email,
+		Name:   name,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

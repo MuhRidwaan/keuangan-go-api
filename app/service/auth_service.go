@@ -85,7 +85,7 @@ func (s *AuthService) Login(input LoginInput) (*LoginResult, int, error) {
 		return nil, http.StatusUnauthorized, errors.New("email atau password salah")
 	}
 
-	token, err := pkgjwt.GenerateToken(user.ID, user.Email)
+	token, err := pkgjwt.GenerateToken(user.ID, user.Email, user.Name)
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.New("gagal membuat token")
 	}

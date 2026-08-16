@@ -1,32 +1,11 @@
 -- ============================================================
--- INIT SCHEMA — keuangan-api
--- Jalankan file ini di database: db_keuangan
--- PERINGATAN: DROP semua tabel lama, jalankan hanya sekali
---             atau saat ingin reset total.
+-- MIGRATION 000001: Initial Core Schema (Safe & Non-Destructive)
 -- ============================================================
 
--- Enable extension untuk gen_random_uuid()
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- ============================================================
--- DROP semua tabel (urutan terbalik agar FK tidak bentrok)
--- ============================================================
-DROP TABLE IF EXISTS agenda_members        CASCADE;
-DROP TABLE IF EXISTS agendas               CASCADE;
-DROP TABLE IF EXISTS saving_contributions  CASCADE;
-DROP TABLE IF EXISTS saving_members        CASCADE;
-DROP TABLE IF EXISTS saving_goals          CASCADE;
-DROP TABLE IF EXISTS transactions          CASCADE;
-DROP TABLE IF EXISTS categories            CASCADE;
-DROP TABLE IF EXISTS users                 CASCADE;
-
--- Tabel lama dari schema sebelumnya (bersihkan juga)
-DROP TABLE IF EXISTS accounts              CASCADE;
-
--- ============================================================
 -- 1. users
--- ============================================================
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_by    VARCHAR(255),
@@ -42,13 +21,11 @@ CREATE TABLE users (
     CONSTRAINT users_email_unique UNIQUE (email)
 );
 
-CREATE INDEX idx_users_email     ON users (email);
-CREATE INDEX idx_users_deleted_at ON users (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_users_email      ON users (email);
+CREATE INDEX IF NOT EXISTS idx_users_deleted_at ON users (deleted_at);
 
--- ============================================================
 -- 2. categories
--- ============================================================
-CREATE TABLE categories (
+CREATE TABLE IF NOT EXISTS categories (
     id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_by VARCHAR(255),
@@ -63,13 +40,11 @@ CREATE TABLE categories (
     icon       VARCHAR(100)
 );
 
-CREATE INDEX idx_categories_user_id    ON categories (user_id);
-CREATE INDEX idx_categories_deleted_at ON categories (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_categories_user_id    ON categories (user_id);
+CREATE INDEX IF NOT EXISTS idx_categories_deleted_at ON categories (deleted_at);
 
--- ============================================================
 -- 3. transactions
--- ============================================================
-CREATE TABLE transactions (
+CREATE TABLE IF NOT EXISTS transactions (
     id          UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     created_by  VARCHAR(255),
@@ -85,14 +60,12 @@ CREATE TABLE transactions (
     notes       TEXT
 );
 
-CREATE INDEX idx_transactions_user_id     ON transactions (user_id);
-CREATE INDEX idx_transactions_category_id ON transactions (category_id);
-CREATE INDEX idx_transactions_deleted_at  ON transactions (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_transactions_user_id     ON transactions (user_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_category_id ON transactions (category_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_deleted_at  ON transactions (deleted_at);
 
--- ============================================================
 -- 4. saving_goals
--- ============================================================
-CREATE TABLE saving_goals (
+CREATE TABLE IF NOT EXISTS saving_goals (
     id             UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at     TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     created_by     VARCHAR(255),
@@ -107,12 +80,10 @@ CREATE TABLE saving_goals (
     deadline       DATE           NOT NULL
 );
 
-CREATE INDEX idx_saving_goals_deleted_at ON saving_goals (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_saving_goals_deleted_at ON saving_goals (deleted_at);
 
--- ============================================================
--- 5. saving_members  (junction — composite PK, no soft delete)
--- ============================================================
-CREATE TABLE saving_members (
+-- 5. saving_members
+CREATE TABLE IF NOT EXISTS saving_members (
     goal_id    UUID        NOT NULL REFERENCES saving_goals (id) ON DELETE CASCADE,
     user_id    UUID        NOT NULL REFERENCES users        (id) ON DELETE CASCADE,
     role       VARCHAR(10) NOT NULL DEFAULT 'member' CHECK (role IN ('owner', 'member')),
@@ -122,10 +93,8 @@ CREATE TABLE saving_members (
     PRIMARY KEY (goal_id, user_id)
 );
 
--- ============================================================
 -- 6. saving_contributions
--- ============================================================
-CREATE TABLE saving_contributions (
+CREATE TABLE IF NOT EXISTS saving_contributions (
     id         UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     created_by VARCHAR(255),
@@ -137,18 +106,15 @@ CREATE TABLE saving_contributions (
     goal_id    UUID           NOT NULL REFERENCES saving_goals (id) ON DELETE CASCADE,
     user_id    UUID           NOT NULL REFERENCES users        (id) ON DELETE CASCADE,
     amount     NUMERIC(15, 2) NOT NULL,
-    type       VARCHAR(3)     NOT NULL DEFAULT 'in' CHECK (type IN ('in', 'out')),
     date       DATE           NOT NULL
 );
 
-CREATE INDEX idx_saving_contributions_goal_id    ON saving_contributions (goal_id);
-CREATE INDEX idx_saving_contributions_user_id    ON saving_contributions (user_id);
-CREATE INDEX idx_saving_contributions_deleted_at ON saving_contributions (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_saving_contributions_goal_id    ON saving_contributions (goal_id);
+CREATE INDEX IF NOT EXISTS idx_saving_contributions_user_id    ON saving_contributions (user_id);
+CREATE INDEX IF NOT EXISTS idx_saving_contributions_deleted_at ON saving_contributions (deleted_at);
 
--- ============================================================
 -- 7. agendas
--- ============================================================
-CREATE TABLE agendas (
+CREATE TABLE IF NOT EXISTS agendas (
     id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_by  VARCHAR(255),
@@ -165,12 +131,10 @@ CREATE TABLE agendas (
     CONSTRAINT agendas_end_after_start CHECK (end_date > start_date)
 );
 
-CREATE INDEX idx_agendas_deleted_at ON agendas (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_agendas_deleted_at ON agendas (deleted_at);
 
--- ============================================================
--- 8. agenda_members  (junction — composite PK, no soft delete)
--- ============================================================
-CREATE TABLE agenda_members (
+-- 8. agenda_members
+CREATE TABLE IF NOT EXISTS agenda_members (
     agenda_id  UUID        NOT NULL REFERENCES agendas (id) ON DELETE CASCADE,
     user_id    UUID        NOT NULL REFERENCES users   (id) ON DELETE CASCADE,
     role       VARCHAR(10) NOT NULL DEFAULT 'member' CHECK (role IN ('owner', 'member')),
@@ -180,9 +144,7 @@ CREATE TABLE agenda_members (
     PRIMARY KEY (agenda_id, user_id)
 );
 
--- ============================================================
--- SEED: Kategori sistem (user_id NULL = global/system)
--- ============================================================
+-- SEED: Kategori default sistem
 INSERT INTO categories (name, type, icon) VALUES
     ('Gaji',          'income',  'briefcase'),
     ('Freelance',     'income',  'laptop'),
@@ -193,4 +155,5 @@ INSERT INTO categories (name, type, icon) VALUES
     ('Belanja',       'expense', 'shopping-bag'),
     ('Tagihan',       'expense', 'file-text'),
     ('Hiburan',       'expense', 'film'),
-    ('Kesehatan',     'expense', 'heart');
+    ('Kesehatan',     'expense', 'heart')
+ON CONFLICT DO NOTHING;

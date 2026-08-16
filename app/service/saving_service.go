@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -217,10 +218,11 @@ func (s *SavingService) Contribute(goalID uuid.UUID, input ContributeInput, user
 		Date:   date,
 	}
 	if err := s.Repo.Contribute(contribution); err != nil {
+		log.Printf("[ERROR] SavingService.Contribute failed: %v", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, http.StatusNotFound, errors.New("saving goal tidak ditemukan")
 		}
-		return nil, http.StatusInternalServerError, errors.New("gagal menyimpan kontribusi")
+		return nil, http.StatusInternalServerError, fmt.Errorf("gagal menyimpan kontribusi: %v", err)
 	}
 
 	// Broadcast notifikasi ke semua member lain (fire-and-forget)
@@ -269,7 +271,8 @@ func (s *SavingService) Withdraw(goalID uuid.UUID, input WithdrawInput, userID u
 		Date:   date,
 	}
 	if err := s.Repo.Withdraw(contribution); err != nil {
-		return nil, http.StatusInternalServerError, errors.New("gagal memproses penarikan")
+		log.Printf("[ERROR] SavingService.Withdraw failed: %v", err)
+		return nil, http.StatusInternalServerError, fmt.Errorf("gagal memproses penarikan: %v", err)
 	}
 
 	// Broadcast notifikasi ke semua member lain (fire-and-forget)

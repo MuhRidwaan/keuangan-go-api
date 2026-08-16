@@ -1,7 +1,10 @@
--- Migration: tambah tabel password_reset_tokens
+-- ============================================================
+-- MIGRATION 000003: Add Password Reset Tokens Table
+-- ============================================================
+
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
-    id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id    UUID        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    id         UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id    UUID         NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     token      VARCHAR(255) NOT NULL,
     expires_at TIMESTAMPTZ  NOT NULL,
     used_at    TIMESTAMPTZ  DEFAULT NULL,
