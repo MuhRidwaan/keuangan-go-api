@@ -10,8 +10,8 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// Connect membuka koneksi ke PostgreSQL menggunakan GORM dan menjalankan AutoMigrate.
-func Connect() *gorm.DB {
+// Connect membuka koneksi ke PostgreSQL menggunakan GORM.
+func Connect() (*gorm.DB, error) {
 	sslmode := os.Getenv("DB_SSLMODE")
 	if sslmode == "" {
 		sslmode = "disable"
@@ -32,9 +32,9 @@ func Connect() *gorm.DB {
 	})
 	if err != nil {
 		log.Printf("ERROR: Gagal konek ke database: %v", err)
-		return nil
+		return nil, err
 	}
 
 	fmt.Println("Berhasil terhubung ke PostgreSQL via GORM!")
-	return db
+	return db, nil
 }
