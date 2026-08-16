@@ -1,0 +1,7 @@
+# Environment variables
+.env
+
+# Binary files and temp directories
+/tmp/
+*.exe
+*.log

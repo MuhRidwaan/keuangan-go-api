@@ -28,10 +28,11 @@ func Connect() *gorm.DB {
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info), // Tampilkan query SQL di log (ubah ke Silent di production)
+		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
-		log.Fatalf("Gagal konek ke database: %v", err)
+		log.Printf("ERROR: Gagal konek ke database: %v", err)
+		return nil
 	}
 
 	fmt.Println("Berhasil terhubung ke PostgreSQL via GORM!")
