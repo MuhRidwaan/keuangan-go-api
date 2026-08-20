@@ -31,6 +31,11 @@ type UpdateAgendaInput struct {
 	Description *string `json:"description"`
 	StartDate   string  `json:"start_date"`
 	EndDate     string  `json:"end_date"`
+	Status      string  `json:"status"`
+}
+
+type UpdateAgendaStatusInput struct {
+	Status string `json:"status" binding:"required"` // "pending" / "completed"
 }
 
 // AddAgendaMemberInput — invite by email
@@ -58,6 +63,7 @@ func (s *AgendaService) CreateAgenda(input CreateAgendaInput, ownerID uuid.UUID,
 		Description: input.Description,
 		StartDate:   startDate,
 		EndDate:     endDate,
+		Status:      "pending",
 	}
 	if err := s.Repo.CreateAgendaWithOwner(agenda, ownerID, ownerEmail); err != nil {
 		return nil, http.StatusInternalServerError, errors.New("gagal membuat agenda")
@@ -90,6 +96,9 @@ func (s *AgendaService) Update(agendaID uuid.UUID, input UpdateAgendaInput, requ
 	if input.Description != nil {
 		agenda.Description = input.Description
 	}
+	if input.Status != "" {
+		agenda.Status = input.Status
+	}
 
 	// Update tanggal hanya jika keduanya diberikan, lalu validasi ulang
 	newStart, newEnd := agenda.StartDate, agenda.EndDate
@@ -114,6 +123,28 @@ func (s *AgendaService) Update(agendaID uuid.UUID, input UpdateAgendaInput, requ
 	if err := s.Repo.UpdateAgenda(agenda); err != nil {
 		return nil, http.StatusInternalServerError, errors.New("gagal mengupdate agenda")
 	}
+	return agenda, http.StatusOK, nil
+}
+
+func (s *AgendaService) UpdateStatus(agendaID uuid.UUID, input UpdateAgendaStatusInput, requesterID uuid.UUID) (*model.Agenda, int, error) {
+	_, err := s.Repo.GetMember(agendaID, requesterID)
+	if err != nil {
+		return nil, http.StatusForbidden, errors.New("kamu bukan anggota dari agenda ini")
+	}
+
+	if input.Status != "pending" && input.Status != "completed" {
+		return nil, http.StatusBadRequest, errors.New("status harus 'pending' atau 'completed'")
+	}
+
+	if err := s.Repo.UpdateStatus(agendaID, input.Status); err != nil {
+		return nil, http.StatusInternalServerError, errors.New("gagal mengupdate status agenda")
+	}
+
+	agenda, err := s.Repo.FindByID(agendaID)
+	if err != nil {
+		return nil, http.StatusInternalServerError, errors.New("gagal mengambil agenda")
+	}
+
 	return agenda, http.StatusOK, nil
 }
 

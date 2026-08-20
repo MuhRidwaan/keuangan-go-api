@@ -41,8 +41,9 @@ func Connect() (*gorm.DB, error) {
 		return nil, err
 	}
 
-	// Ensure missing columns like saving_contributions.type are patched automatically
+	// Ensure missing columns are patched automatically
 	_ = db.Exec(`ALTER TABLE saving_contributions ADD COLUMN IF NOT EXISTS type VARCHAR(3) NOT NULL DEFAULT 'in';`).Error
+	_ = db.Exec(`ALTER TABLE agendas ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'pending';`).Error
 
 	// AutoMigrate model agar kolom baru ter-sync ke database
 	if err := db.AutoMigrate(
@@ -55,6 +56,7 @@ func Connect() (*gorm.DB, error) {
 		&model.Agenda{},
 		&model.AgendaMember{},
 		&model.Notification{},
+		&model.Budget{},
 	); err != nil {
 		log.Printf("Warning AutoMigrate: %v", err)
 	}

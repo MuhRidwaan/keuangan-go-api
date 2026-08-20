@@ -9,6 +9,7 @@ type Agenda struct {
 	Description *string   `gorm:"type:text" json:"description,omitempty"`
 	StartDate   time.Time `gorm:"type:timestamptz;not null" json:"start_date"`
 	EndDate     time.Time `gorm:"type:timestamptz;not null" json:"end_date"`
+	Status      string    `gorm:"type:varchar(20);not null;default:'pending'" json:"status"`
 
 	// Relasi ke anggota agenda
 	Members []AgendaMember `gorm:"foreignKey:AgendaID" json:"members,omitempty"`

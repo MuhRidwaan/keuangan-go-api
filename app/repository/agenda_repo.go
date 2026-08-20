@@ -32,6 +32,7 @@ func (r *AgendaRepository) GetAgendasByMember(userID uuid.UUID) ([]model.Agenda,
 		Joins("JOIN agenda_members ON agenda_members.agenda_id = agendas.id").
 		Where("agenda_members.user_id = ? AND agendas.deleted_at IS NULL", userID).
 		Preload("Members").
+		Preload("Members.User").
 		Order("agendas.start_date ASC").
 		Find(&agendas).Error
 	return agendas, err
@@ -39,7 +40,7 @@ func (r *AgendaRepository) GetAgendasByMember(userID uuid.UUID) ([]model.Agenda,
 
 func (r *AgendaRepository) FindByID(agendaID uuid.UUID) (*model.Agenda, error) {
 	var agenda model.Agenda
-	err := r.DB.Preload("Members").First(&agenda, "id = ?", agendaID).Error
+	err := r.DB.Preload("Members").Preload("Members.User").First(&agenda, "id = ?", agendaID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -61,6 +62,10 @@ func (r *AgendaRepository) AddMember(member *model.AgendaMember) error {
 
 func (r *AgendaRepository) UpdateAgenda(agenda *model.Agenda) error {
 	return r.DB.Save(agenda).Error
+}
+
+func (r *AgendaRepository) UpdateStatus(agendaID uuid.UUID, status string) error {
+	return r.DB.Model(&model.Agenda{}).Where("id = ?", agendaID).Update("status", status).Error
 }
 
 // DeleteAgenda soft-delete agenda beserta semua member-nya dalam satu transaction.

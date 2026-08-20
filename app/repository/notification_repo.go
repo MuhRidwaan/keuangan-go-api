@@ -11,6 +11,11 @@ type NotificationRepository struct {
 	DB *gorm.DB
 }
 
+// Create menyimpan satu notifikasi baru.
+func (r *NotificationRepository) Create(notification *model.Notification) error {
+	return r.DB.Create(notification).Error
+}
+
 // BulkCreate menyimpan banyak notifikasi sekaligus dalam satu query.
 func (r *NotificationRepository) BulkCreate(notifications []model.Notification) error {
 	if len(notifications) == 0 {
