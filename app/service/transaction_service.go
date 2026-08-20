@@ -41,6 +41,7 @@ type TransactionListResponse struct {
 	Page              int                 `json:"page"`
 	Limit             int                 `json:"limit"`
 	TotalPages        int                 `json:"total_pages"`
+	TotalBalance      float64             `json:"total_balance"`
 	TotalExpenseToday float64             `json:"total_expense_today"`
 }
 
@@ -53,13 +54,13 @@ type CategoryReport struct {
 }
 
 type ReportSummaryResponse struct {
-	StartDate     string           `json:"start_date"`
-	EndDate       string           `json:"end_date"`
-	TotalIncome   float64          `json:"total_income"`
-	TotalExpense  float64          `json:"total_expense"`
-	NetBalance    float64          `json:"net_balance"`
-	Breakdown     []CategoryReport `json:"breakdown"`
-	TransactionCount int           `json:"transaction_count"`
+	StartDate        string           `json:"start_date"`
+	EndDate          string           `json:"end_date"`
+	TotalIncome      float64          `json:"total_income"`
+	TotalExpense     float64          `json:"total_expense"`
+	NetBalance       float64          `json:"net_balance"`
+	Breakdown        []CategoryReport `json:"breakdown"`
+	TransactionCount int              `json:"transaction_count"`
 }
 
 func (s *TransactionService) Create(input CreateTransactionInput, userID uuid.UUID) (*model.Transaction, int, error) {
@@ -92,6 +93,7 @@ func (s *TransactionService) GetByUser(userID uuid.UUID, startDate, endDate, cat
 		return nil, http.StatusInternalServerError, errors.New("gagal mengambil transaksi")
 	}
 
+	totalBalance, _ := s.Repo.GetTotalBalance(userID)
 	totalExpenseToday, _ := s.Repo.GetTotalExpenseToday(userID)
 
 	totalPages := 1
@@ -105,6 +107,7 @@ func (s *TransactionService) GetByUser(userID uuid.UUID, startDate, endDate, cat
 		Page:              page,
 		Limit:             limit,
 		TotalPages:        totalPages,
+		TotalBalance:      totalBalance,
 		TotalExpenseToday: totalExpenseToday,
 	}
 

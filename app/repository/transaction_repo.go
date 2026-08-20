@@ -64,7 +64,6 @@ func (r *TransactionRepository) FindByID(id uuid.UUID) (*model.Transaction, erro
 	return &tx, nil
 }
 
-// Update mempebaiki bug pergantian kategori dengan Omit("Category") agar GORM tidak mencoba mengupdate struct Category lama.
 func (r *TransactionRepository) Update(tx *model.Transaction) error {
 	tx.Category = model.Category{} // Clear struct agar tidak ada collision
 	if err := r.DB.Omit("Category").Save(tx).Error; err != nil {
@@ -73,12 +72,30 @@ func (r *TransactionRepository) Update(tx *model.Transaction) error {
 	return r.DB.Preload("Category").First(tx, "id = ?", tx.ID).Error
 }
 
-// Delete melakukan soft delete (set deleted_at).
 func (r *TransactionRepository) Delete(id uuid.UUID) error {
 	return r.DB.Delete(&model.Transaction{}, "id = ?", id).Error
 }
 
-// GetTotalExpenseToday menghitung total pengeluaran hari ini milik user.
+// GetTotalBalance menghitung total saldo keseluruhan (Pemasukan - Pengeluaran) user tanpa batas pagination.
+func (r *TransactionRepository) GetTotalBalance(userID uuid.UUID) (float64, error) {
+	var totalIncome float64
+	var totalExpense float64
+
+	r.DB.Model(&model.Transaction{}).
+		Joins("JOIN categories ON categories.id = transactions.category_id").
+		Where("transactions.user_id = ? AND categories.type = 'income' AND transactions.deleted_at IS NULL", userID).
+		Select("COALESCE(SUM(transactions.amount), 0)").
+		Scan(&totalIncome)
+
+	r.DB.Model(&model.Transaction{}).
+		Joins("JOIN categories ON categories.id = transactions.category_id").
+		Where("transactions.user_id = ? AND categories.type = 'expense' AND transactions.deleted_at IS NULL", userID).
+		Select("COALESCE(SUM(transactions.amount), 0)").
+		Scan(&totalExpense)
+
+	return totalIncome - totalExpense, nil
+}
+
 func (r *TransactionRepository) GetTotalExpenseToday(userID uuid.UUID) (float64, error) {
 	var total float64
 	todayStr := time.Now().Format("2006-01-02")
@@ -93,7 +110,6 @@ func (r *TransactionRepository) GetTotalExpenseToday(userID uuid.UUID) (float64,
 	return total, err
 }
 
-// GetTotalExpenseMonth menghitung total pengeluaran bulan dan tahun tertentu.
 func (r *TransactionRepository) GetTotalExpenseMonth(userID uuid.UUID, month, year int, categoryID *uuid.UUID) (float64, error) {
 	var total float64
 	query := r.DB.Model(&model.Transaction{}).
